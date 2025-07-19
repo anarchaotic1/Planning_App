@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Learning Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #e5e7eb;
+        }
+        .task-item:hover {
+            background-color: #1e293b;
+        }
+        .task-complete {
+            text-decoration: line-through;
+            color: #4b5563;
+        }
+        .day.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .day.has-summary .day-number {
+            position: relative;
+        }
+        .day.has-summary .day-number::after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background-color: #3b82f6;
+            border-radius: 1px;
+        }
+        .timer-button:hover {
+            transform: scale(1.05);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        /* Easter Egg Animation */
+        @keyframes barrel-roll {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .do-a-barrel-roll {
+            animation: barrel-roll 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="app" class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pb-24">
+        
+        <!-- Left Column: Calendar and Schedule -->
+        <div class="lg:col-span-2 bg-gray-800 p-6 rounded-2xl shadow-lg">
+            <h2 id="planTitle" class="text-3xl font-bold text-white mb-6">Your 8-Week Learning Plan</h2>
+            <div id="calendar" class="grid grid-cols-7 gap-2 mb-6"></div>
+            <div id="scheduleContainer" class="space-y-6">
+                <p class="text-gray-400 text-center">Set a start date and click "Start/Reset Plan" to see your schedule.</p>
+            </div>
+        </div>
+
+        <!-- Right Column: Controls, Timer & Daily Spark -->
+        <div class="lg:col-span-1 space-y-8">
+            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold text-white mb-4">Dashboard</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="startDate" class="block text-sm font-medium text-gray-400 mb-2">Set Your Start Date</label>
+                        <input type="date" id="startDate" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button id="startPlanBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Start/Reset Plan</button>
+                </div>
+            </div>
+
+            <div id="timerBlock" class="bg-gray-800 p-6 rounded-2xl shadow-lg text-center">
+                <h3 class="text-xl font-bold text-white mb-4">Focus Timer</h3>
+                <div id="timer" class="text-6xl font-bold text-white mb-4">25:00</div>
+                <div class="flex justify-center items-center space-x-2 mb-4">
+                    <button id="startTimer" class="timer-button bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full transition"><i class="fas fa-play"></i></button>
+                    <button id="pauseTimer" class="timer-button bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full transition"><i class="fas fa-pause"></i></button>
+                    <button id="resetTimer" class="timer-button bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition"><i class="fas fa-sync"></i></button>
+                </div>
+                <div id="timerPresets" class="flex flex-wrap justify-center gap-2 text-sm mb-4">
+                     <!-- Custom presets will be injected here -->
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" id="customTimerInput" placeholder="Mins" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2 text-center">
+                    <button id="addTimerPreset" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+
+            <div id="dailySparkSection" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">Daily Spark</h3>
+                    <button id="newSparkBtn" class="text-blue-400 hover:text-blue-300 transition"><i class="fas fa-sync-alt"></i> New Spark</button>
+                </div>
+                <div id="sparkContent">
+                    <h4 id="sparkTitle" class="text-lg font-semibold text-blue-400 mb-2"></h4>
+                    <p id="sparkSummary" class="text-gray-300 mb-3 text-sm"></p>
+                    <a id="sparkLink" href="#" target="_blank" class="text-sm font-semibold text-green-400 hover:text-green-300">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            
+            <div id="dailySummaryContainer" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h3 class="text-xl font-bold text-white mb-4">Daily Summary</h3>
+                <p id="summaryDate" class="text-gray-400 mb-2"></p>
+                <textarea id="dailySummaryText" class="w-full bg-gray-700 border-gray-600 text-white rounded-lg p-2 h-32 resize-none" placeholder="What did you learn today?"></textarea>
+                <button id="saveSummaryBtn" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Save Summary</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="easter-egg-trigger" class="fixed bottom-4 right-6 text-xs text-gray-600 cursor-pointer hover:text-gray-400 transition">
+        Made using Gemini by Hari
+    </div>
+
+    <audio id="timer-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+
+    <script>
+        // --- DATA ---
+        const studyPlan = {
+            "C/C++ for Electronics": [
+                { task: "Setup Dev Env (GCC, VS Code)", resource: "code.visualstudio.com/docs/cpp/config-mingw" },
+                { task: "C Basics: Variables, Data Types", resource: "www.learn-c.org/" },
+                { task: "C Control Flow: if, switch, loops", resource: "www.geeksforgeeks.org/c-if-else-statement/" },
+                { task: "C Functions & Program Structure", resource: "www.tutorialspoint.com/cprogramming/c_functions.htm" },
+                { task: "Intro to Pointers & Memory", resource: "www.cprogramming.com/tutorial/c/lesson6.html" },
+                { task: "Project: CLI Calculator", project: true },
+                { task: "Weekly Review 1", review: true },
+                { task: "Deep Dive: Pointer Arithmetic", resource: "www.geeksforgeeks.org/pointer-arithmetic-c-cpp/" },
+                { task: "Arrays and Strings in C", resource: "www.programiz.com/c-programming/c-arrays" },
+                { task: "Structs and Unions", resource: "www.geeksforgeeks.org/structures-in-c/" },
+                { task: "Bitwise Operations", resource: "www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm" },
+                { task: "File I/O in C", resource: "www.programiz.com/c-programming/c-file-input-output" },
+                { task: "Project: Manipulate BMP image", project: true },
+                { task: "Weekly Review 2", review: true },
+                { task: "C vs C++: Key Differences", resource: "www.geeksforgeeks.org/difference-between-c-and-cpp/" },
+                { task: "C++ Basics: cout, cin, classes", resource: "www.cplusplus.com/doc/tutorial/" },
+                { task: "OOP: Encapsulation, Abstraction", resource: "www.w3schools.com/cpp/cpp_oop.asp" },
+                { task: "Constructors & Destructors", resource: "www.geeksforgeeks.org/constructors-c/" },
+                { task: "Intro to Arduino & C++", resource: "docs.arduino.cc/learn/programming/basics" },
+                { task: "Project: Arduino LED Control", project: true },
+                { task: "Weekly Review 3", review: true },
+                { task: "OOP: Inheritance & Polymorphism", resource: "www.geeksforgeeks.org/polymorphism-in-c/" },
+                { task: "Function & Operator Overloading", resource: "www.tutorialspoint.com/cplusplus/cpp_overloading.htm" },
+                { task: "C++ STL Intro: vector, string", resource: "www.geeksforgeeks.org/the-c-standard-template-library-stl/" },
+                { task: "Memory Mgmt: new & delete", resource: "www.geeksforgeeks.org/new-and-delete-in-cpp/" },
+                { task: "Reading Arduino Sensor Data", resource: "randomnerdtutorials.com/projects-arduino/" },
+                { task: "Project: Temperature Monitor", project: true },
+                { task: "Weekly Review 4", review: true },
+                { task: "STL Containers: map, set, list", resource: "www.cplusplus.com/reference/stl/" },
+                { task: "STL Algorithms: sort, find", resource: "www.geeksforgeeks.org/c-magicians-stl-algorithms/" },
+                { task: "C++ Templates", resource: "www.geeksforgeeks.org/templates-cpp/" },
+                { task: "Exception Handling: try, catch", resource: "www.tutorialspoint.com/cplusplus/cpp_exception_handling.htm" },
+                { task: "Smart Pointers: unique_ptr, shared_ptr", resource: "www.geeksforgeeks.org/smart-pointers-cpp/" },
+                { task: "Project: Serial Command Parser", project: true },
+                { task: "Weekly Review 5", review: true },
+                { task: "The `volatile` keyword", resource: "developer.arm.com/documentation/101754/0619/arm-c-and-c---language-extensions/--volatile-keyword" },
+                { task: "Memory-Mapped I/O", resource: "en.wikipedia.org/wiki/Memory-mapped_I/O" },
+                { task: "Interrupt Service Routines (ISRs)", resource: "www.geeksforgeeks.org/interrupts-and-interrupt-service-routines/" },
+                { task: "Communication Protocols: I2C", resource: "learn.sparkfun.com/tutorials/i2c" },
+                { task: "Communication Protocols: SPI", resource: "learn.sparkfun.com/tutorials/serial-peripheral-interface-spi" },
+                { task: "Project: Multi-sensor system", project: true },
+                { task: "Weekly Review 6", review: true },
+                { task: "Intro to Real-Time Operating Systems (RTOS)", resource: "www.freertos.org/about-freertos.html" },
+                { task: "RTOS Concepts: Tasks, Semaphores", resource: "www.geeksforgeeks.org/introduction-of-rtos-real-time-operating-system/" },
+                { task: "Debugging Embedded Systems", resource: "www.gdb.bhaarat.com/gdb-tutorial.html" },
+                { task: "Optimizing C/C++ for Performance", resource: "en.cppreference.com/w/cpp/language/eval_order" },
+                { task: "Optimizing for Memory Footprint", resource: "www.embedded.com/reducing-ram-usage-in-your-embedded-system/" },
+                { task: "Final Project: Mini Weather Station", project: true },
+                { task: "Final Review & Next Steps", review: true },
+                 ...Array(7).fill({ task: "Catch-up or Advanced Project Work", review: true })
+            ],
+            "Verilog/SystemVerilog & VLSI": [
+                { task: "Digital Logic Fundamentals", resource: "www.khanacademy.org/science/electrical-engineering/ee-digital-logic" },
+                { task: "VLSI Design Flow (ASIC vs FPGA)", resource: "www.tutorialspoint.com/vlsi_design/vlsi_design_digital_system.htm" },
+                { task: "Verilog Basics: Modules, Ports", resource: "www.asic-world.com/verilog/veritut.html" },
+                { task: "Verilog Modeling Styles", resource: "www.chipverify.com/verilog/verilog-modeling-styles" },
+                { task: "Setup EDA Playground", resource: "www.edaplayground.com/" },
+                { task: "Project: Full Adder", project: true },
+                { task: "Weekly Review 1", review: true },
+                { task: "Behavioral Modeling: `always` blocks", resource: "www.chipverify.com/verilog/verilog-always-block" },
+                { task: "Combinational Logic Design", resource: "www.javatpoint.com/combinational-circuits-in-digital-logic" },
+                { task: "Sequential Logic: Latches vs FFs", resource: "www.geeksforgeeks.org/difference-between-latch-and-flip-flop/" },
+                { task: "Sequential Logic Design", resource: "www.asic-world.com/verilog/vbehave2.html" },
+                { task: "Blocking vs. Non-blocking", resource: "www.chipverify.com/verilog/verilog-blocking-non-blocking" },
+                { task: "Project: 4-bit Sync Counter", project: true },
+                { task: "Weekly Review 2", review: true },
+                { task: "Finite State Machines (FSMs)", resource: "www.doulos.com/knowhow/verilog-designers-guide/verilog-fsm/" },
+                { task: "Designing FSMs in Verilog", resource: "www.chipverify.com/verilog/verilog-fsm" },
+                { task: "Writing Verilog Testbenches", resource: "www.asic-world.com/verilog/veritut3.html" },
+                { task: "Intro to SystemVerilog", resource: "www.doulos.com/knowhow/systemverilog/" },
+                { task: "SystemVerilog Data Types", resource: "www.chipverify.com/systemverilog/systemverilog-data-types" },
+                { task: "Project: Traffic Light Controller FSM", project: true },
+                { task: "Weekly Review 3", review: true },
+                { task: "SystemVerilog Procedural Blocks", resource: "www.chipverify.com/systemverilog/systemverilog-always-procedures" },
+                { task: "SystemVerilog Classes Intro", resource: "www.doulos.com/knowhow/systemverilog/tutorial/classes/" },
+                { task: "FPGA Architecture & Flow", resource: "www.intel.com/content/www/us/en/products/programmable/fpga/what-is-an-fpga.html" },
+                { task: "FPGA Toolchain Basics (Vivado)", resource: "www.xilinx.com/products/design-tools/vivado.html" },
+                { task: "Understanding Synthesis", resource: "www.allaboutcircuits.com/technical-articles/basics-of-fpga-synthesis/" },
+                { task: "Project: Synthesize Counter", project: true },
+                { task: "Weekly Review 4", review: true },
+                { task: "SystemVerilog Interfaces", resource: "www.chipverify.com/systemverilog/systemverilog-interface" },
+                { task: "Clocking Blocks & Modports", resource: "www.doulos.com/knowhow/systemverilog/tutorial/testbenches/" },
+                { task: "Randomization in SV", resource: "www.verificationguide.com/p/systemverilog-randomization.html" },
+                { task: "Intro to Assertions (SVA)", resource: "www.chipverify.com/systemverilog/systemverilog-assertions" },
+                { task: "Functional Coverage Concepts", resource: "www.verificationguide.com/p/functional-coverage.html" },
+                { task: "Project: Constrained-Random TB", project: true },
+                { task: "Weekly Review 5", review: true },
+                { task: "Timing Analysis: Setup & Hold", resource: "www.geeksforgeeks.org/setup-and-hold-time-in-digital-electronics/" },
+                { task: "Clock Domain Crossing (CDC)", resource: "www.doulos.com/knowhow/fpga/clock-domain-crossing/" },
+                { task: "Design for Test (DFT)", resource: "en.wikipedia.org/wiki/Design_for_testing" },
+                { task: "Low Power Design Techniques", resource: "www.synopsys.com/low-power-design.html" },
+                { task: "Verification Methodologies (UVM intro)", resource: "www.verificationacademy.com/uvm-ovm" },
+                { task: "Project: Design with CDC", project: true },
+                { task: "Weekly Review 6", review: true },
+                { task: "Advanced Synthesis Options", resource: "docs.xilinx.com/r/en-US/ug901-vivado-synthesis/Advanced-Synthesis-Options" },
+                { task: "Static Timing Analysis (STA)", resource: "www.geeksforgeeks.org/static-timing-analysis-sta/" },
+                { task: "Scripting for VLSI (Tcl/Perl)", resource: "www.tcl.tk/man/tcl8.6/TclCmd/contents.htm" },
+                { task: "Physical Design Flow Intro", resource: "www.geeksforgeeks.org/vlsi-physical-design-pd/" },
+                { task: "Git for Hardware Design", resource: "www.linkedin.com/pulse/git-your-fpga-project-yes-you-can-adam-taylor" },
+                { task: "Final Project: Simple CPU Core", project: true },
+                { task: "Final Review & Next Steps", review: true },
+                ...Array(7).fill({ task: "Catch-up or Advanced Project Work", review: true })
+            ]
+        };
+        const dailySparks = [
+            { title: "C: Pointers vs. References", summary: "Pointers store memory addresses and can be reassigned or NULL. C++ references are aliases for existing variables, must be initialized, and cannot be changed. Pointers offer flexibility; references offer safety.", link: "https://www.geeksforgeeks.org/pointers-vs-references-cpp/" },
+            { title: "Verilog: Blocking vs. Non-blocking", summary: "Blocking (=) executes sequentially. Non-blocking (<=) executes in parallel. Rule of thumb: Use blocking for combinational logic (`always_comb`) and non-blocking for sequential logic (`always_ff`).", link: "https://www.chipverify.com/verilog/verilog-blocking-non-blocking" },
+            { title: "C: The `volatile` Keyword", summary: "Tells the compiler that a variable's value may change unexpectedly. Essential for memory-mapped hardware registers and variables shared with interrupt service routines to prevent unwanted compiler optimizations.", link: "https://developer.arm.com/documentation/101754/0619/arm-c-and-c---language-extensions/--volatile-keyword" },
+            { title: "VLSI: Setup and Hold Time", summary: "Setup time is the minimum time data must be stable before the clock edge. Hold time is the minimum time data must be stable after the clock edge. Violating these can cause metastability, leading to unpredictable circuit behavior.", link: "https://www.geeksforgeeks.org/setup-and-hold-time-in-digital-electronics/" },
+            { title: "SystemVerilog: `logic` data type", summary: "An improvement over Verilog's `reg` and `wire`. It can be driven by both continuous assignments and procedural blocks, simplifying code and preventing common net-type errors.", link: "https://www.chipverify.com/systemverilog/systemverilog-data-types" },
+            { title: "C++: RAII Idiom", summary: "Resource Acquisition Is Initialization. A core C++ concept where resource lifetime (memory, files, locks) is tied to an object's scope. The destructor automatically handles cleanup, preventing resource leaks.", link: "https://en.cppreference.com/w/cpp/language/raii" },
+            { title: "FPGA vs. ASIC", summary: "FPGAs (Field-Programmable Gate Arrays) are reconfigurable, ideal for prototyping and lower-volume production. ASICs (Application-Specific Integrated Circuits) are custom-built for one function, offering higher performance and lower unit cost at high volumes.", link: "https://www.intel.com/content/www/us/en/products/programmable/fpga/what-is-an-fpga.html" },
+            { title: "Verilog: Finite State Machines (FSM)", summary: "A model of computation used to design sequential logic. Moore machine outputs depend only on the current state. Mealy machine outputs depend on both the current state and inputs.", link: "https://www.doulos.com/knowhow/verilog-designers-guide/verilog-fsm/" },
+            { title: "C: Bitwise Operations", summary: "Manipulating data at the bit level using operators like AND (&), OR (|), XOR (^), and shifts (<<, >>). Crucial for low-level hardware control, setting/clearing flags in registers, and optimizing code.", link: "https://www.tutorialspoint.com/cprogramming/c_bitwise_operators.htm" },
+            { title: "VLSI: Clock Domain Crossing (CDC)", summary: "The process of passing signals between parts of a circuit operating on different clocks. Requires special synchronizer circuits (like 2-FF synchronizers) to prevent metastability and ensure reliable data transfer.", link: "https://www.doulos.com/knowhow/fpga/clock-domain-crossing/" }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            let state = {
+                startDate: null,
+                study: { completedTasks: {}, dailySummaries: {}, customLinks: {} },
+                timerPresets: [15, 25, 50],
+                activeDay: 0
+            };
+
+            const loadState = () => {
+                const savedState = JSON.parse(localStorage.getItem('personalPlanState_v6'));
+                if (savedState) {
+                    Object.assign(state, savedState);
+                    if (!state.timerPresets) state.timerPresets = [15, 25, 50];
+                    if (!state.study.customLinks) state.study.customLinks = {};
+                }
+                if (state.startDate) {
+                    startDateInput.value = state.startDate;
+                    generatePlan();
+                }
+                renderTimerPresets();
+                generateRandomSpark();
+            };
+
+            const saveState = () => {
+                localStorage.setItem('personalPlanState_v6', JSON.stringify(state));
+            };
+
+            // --- UI ELEMENTS ---
+            const appContainer = document.getElementById('app');
+            const startDateInput = document.getElementById('startDate');
+            const startPlanBtn = document.getElementById('startPlanBtn');
+            const scheduleContainer = document.getElementById('scheduleContainer');
+            const calendarContainer = document.getElementById('calendar');
+            const dailySummaryContainer = document.getElementById('dailySummaryContainer');
+            const timerPresetsContainer = document.getElementById('timerPresets');
+            const customTimerInput = document.getElementById('customTimerInput');
+            const addTimerPresetBtn = document.getElementById('addTimerPreset');
+            const easterEggTrigger = document.getElementById('easter-egg-trigger');
+
+            // --- TIMER LOGIC ---
+            let timerInterval;
+            let timeLeft;
+            let initialTime = 25 * 60;
+            const timerDisplay = document.getElementById('timer');
+            const startTimerBtn = document.getElementById('startTimer');
+            const pauseTimerBtn = document.getElementById('pauseTimer');
+            const resetTimerBtn = document.getElementById('resetTimer');
+            const timerSound = document.getElementById('timer-sound');
+            
+            const updateTimerDisplay = () => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            };
+            const startTimer = () => {
+                if (timerInterval) return;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        timerSound.play();
+                        resetTimer();
+                    }
+                }, 1000);
+            };
+            const pauseTimer = () => {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            };
+            const resetTimer = () => {
+                pauseTimer();
+                timeLeft = initialTime;
+                updateTimerDisplay();
+            };
+            window.setTimer = (minutes) => {
+                initialTime = minutes * 60;
+                resetTimer();
+            };
+            startTimerBtn.addEventListener('click', startTimer);
+            pauseTimerBtn.addEventListener('click', pauseTimer);
+            resetTimerBtn.addEventListener('click', resetTimer);
+
+            const renderTimerPresets = () => {
+                timerPresetsContainer.innerHTML = '';
+                state.timerPresets.forEach(time => {
+                    const presetDiv = document.createElement('div');
+                    presetDiv.className = 'relative group';
+                    presetDiv.innerHTML = `
+                        <button class="bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded-full" onclick="setTimer(${time})">${time} min</button>
+                        <button class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full h-5 w-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" data-time="${time}">&times;</button>
+                    `;
+                    timerPresetsContainer.appendChild(presetDiv);
+                });
+            };
+            timerPresetsContainer.addEventListener('click', e => {
+                if (e.target.dataset.time) {
+                    const timeToRemove = parseInt(e.target.dataset.time);
+                    state.timerPresets = state.timerPresets.filter(t => t !== timeToRemove);
+                    renderTimerPresets();
+                    saveState();
+                }
+            });
+
+            addTimerPresetBtn.addEventListener('click', () => {
+                const time = parseInt(customTimerInput.value);
+                if (time > 0 && !state.timerPresets.includes(time)) {
+                    state.timerPresets.push(time);
+                    state.timerPresets.sort((a, b) => a - b);
+                    renderTimerPresets();
+                    saveState();
+                    customTimerInput.value = '';
+                }
+            });
+
+            // --- PLAN GENERATION & DISPLAY ---
+            startPlanBtn.addEventListener('click', () => {
+                if (!startDateInput.value) return;
+                state.startDate = startDateInput.value;
+                state.study = { completedTasks: {}, dailySummaries: {}, customLinks: {} };
+                state.activeDay = 0;
+                generatePlan();
+                saveState();
+            });
+
+            const generatePlan = () => {
+                if (!state.startDate) return;
+                generateCalendar(56);
+                displayDayTasks(state.activeDay);
+            };
+
+            const generateCalendar = (duration) => {
+                calendarContainer.innerHTML = '';
+                const startDate = new Date(state.startDate + 'T00:00:00');
+                const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+                dayHeaders.forEach(day => {
+                    calendarContainer.innerHTML += `<div class="text-center font-bold text-gray-400 text-xs">${day}</div>`;
+                });
+
+                for (let i = 0; i < duration; i++) {
+                    const dayDate = new Date(startDate);
+                    dayDate.setDate(startDate.getDate() + i);
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'day text-center p-1 rounded-full cursor-pointer transition flex flex-col justify-center';
+                    dayEl.dataset.dayIndex = i;
+                    
+                    let dayContent = `<span class="day-number">${dayDate.getDate()}</span>`;
+                    if (dayDate.getDate() === 1 || i === 0) {
+                        const monthName = dayDate.toLocaleDateString('en-US', { month: 'short' });
+                        dayContent = `<span class="text-xs text-cyan-400 font-bold -mb-1">${monthName}</span>` + dayContent;
+                    }
+                    dayEl.innerHTML = dayContent;
+                    
+                    if (state.activeDay === i) dayEl.classList.add('active');
+                    if (state.study.dailySummaries[i]) dayEl.classList.add('has-summary');
+                    
+                    dayEl.addEventListener('click', () => {
+                        state.activeDay = i;
+                        displayDayTasks(i);
+                        updateCalendarActiveDay();
+                        saveState();
+                    });
+                    calendarContainer.appendChild(dayEl);
+                }
+            };
+
+            const updateCalendarActiveDay = () => {
+                document.querySelectorAll('.day').forEach(d => d.classList.remove('active'));
+                const activeDayEl = document.querySelector(`.day[data-day-index='${state.activeDay}']`);
+                if (activeDayEl) activeDayEl.classList.add('active');
+            };
+
+            const displayDayTasks = (dayIndex) => {
+                scheduleContainer.innerHTML = '';
+                const startDate = new Date(state.startDate + 'T00:00:00');
+                const currentDate = new Date(startDate);
+                currentDate.setDate(startDate.getDate() + dayIndex);
+                const dateString = currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                
+                const header = document.createElement('h3');
+                header.className = 'text-2xl font-bold text-white mb-4';
+                header.textContent = `Week ${Math.floor(dayIndex / 7) + 1}, Day ${dayIndex % 7 + 1} (${dateString})`;
+                scheduleContainer.appendChild(header);
+
+                const tracksContainer = document.createElement('div');
+                tracksContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+                
+                Object.keys(studyPlan).forEach(trackName => {
+                    const trackDiv = document.createElement('div');
+                    trackDiv.className = 'bg-gray-900 p-4 rounded-lg space-y-3';
+                    trackDiv.innerHTML = `<h4 class="text-lg font-semibold text-blue-400 mb-3">${trackName}</h4>`;
+                    
+                    const task = studyPlan[trackName][dayIndex];
+                    if (task) {
+                        const taskId = `${trackName}-${dayIndex}`;
+                        const isComplete = !!state.study.completedTasks[taskId];
+                        
+                        const taskHTML = `
+                            <div class="task-item flex items-start p-2 rounded-md transition cursor-pointer" onclick="toggleTask('${taskId}')">
+                                <i class="far ${isComplete ? 'fa-check-circle text-green-500' : 'fa-circle'} mt-1 mr-3 text-lg"></i>
+                                <div class="flex-1 ${isComplete ? 'task-complete' : ''}">
+                                    <span>${task.task} ${task.project ? '<i class="fas fa-star text-yellow-400 text-xs ml-1"></i>' : ''} ${task.review ? '<i class="fas fa-book-open text-purple-400 text-xs ml-1"></i>' : ''}</span>
+                                    ${task.resource ? `<a href="https://${task.resource}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400" onclick="event.stopPropagation()"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                                    <div class="custom-links text-xs mt-2 space-y-1">
+                                        ${(state.study.customLinks[taskId] || []).map(link => `<a href="${link.url}" target="_blank" class="block bg-gray-700 p-1 rounded hover:bg-gray-600" onclick="event.stopPropagation()"><i class="fas fa-link mr-2"></i>${link.name}</a>`).join('')}
+                                    </div>
+                                </div>
+                                <button class="ml-2 text-xs bg-blue-800 hover:bg-blue-700 px-2 py-1 rounded" onclick="addCustomLink(event, '${taskId}')">Add Link</button>
+                            </div>
+                        `;
+                        trackDiv.innerHTML += taskHTML;
+                    }
+                    tracksContainer.appendChild(trackDiv);
+                });
+                scheduleContainer.appendChild(tracksContainer);
+                
+                dailySummaryContainer.style.display = 'block';
+                document.getElementById('summaryDate').textContent = `For: ${dateString}`;
+                document.getElementById('dailySummaryText').value = state.study.dailySummaries[dayIndex] || '';
+            };
+
+            window.toggleTask = (taskId) => {
+                state.study.completedTasks[taskId] = !state.study.completedTasks[taskId];
+                saveState();
+                displayDayTasks(state.activeDay);
+            };
+
+            window.addCustomLink = (event, taskId) => {
+                event.stopPropagation();
+                const linkName = prompt("Enter a name for your link:");
+                if (!linkName) return;
+                let url = prompt("Enter the URL (e.g., https://example.com):");
+                if (!url) return;
+                if (!url.startsWith('http')) url = 'https://' + url;
+                
+                if (!state.study.customLinks[taskId]) state.study.customLinks[taskId] = [];
+                state.study.customLinks[taskId].push({ name: linkName, url });
+                saveState();
+                displayDayTasks(state.activeDay);
+            };
+
+            // --- Daily Spark & Summary ---
+            const generateRandomSpark = () => {
+                const spark = dailySparks[Math.floor(Math.random() * dailySparks.length)];
+                document.getElementById('sparkTitle').textContent = spark.title;
+                document.getElementById('sparkSummary').textContent = spark.summary;
+                document.getElementById('sparkLink').href = spark.link;
+            };
+            document.getElementById('newSparkBtn').addEventListener('click', generateRandomSpark);
+            document.getElementById('saveSummaryBtn').addEventListener('click', () => {
+                if (state.activeDay !== null) {
+                    state.study.dailySummaries[state.activeDay] = document.getElementById('dailySummaryText').value;
+                    saveState();
+                    generateCalendar(56);
+                }
+            });
+
+            // --- Easter Egg ---
+            easterEggTrigger.addEventListener('click', () => {
+                if (appContainer.classList.contains('do-a-barrel-roll')) return;
+                
+                console.log("Whee! Thanks for finding this. - Gemini 🚀");
+                appContainer.classList.add('do-a-barrel-roll');
+                
+                setTimeout(() => {
+                    appContainer.classList.remove('do-a-barrel-roll');
+                }, 1000); // Animation duration
+            });
+
+            // --- INITIALIZATION ---
+            loadState();
+            resetTimer();
+        });
+    </script>
+</body>
+</html>
