@@ -1,0 +1,21 @@
+{
+  "name": "Personal Learning Plan",
+  "short_name": "LearnPlan",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "description": "A personal planner for tech learning, created by Hari with Gemini.",
+  "icons": [
+    {
+      "src": "https://www.gstatic.com/android/keyboard/emojikit/20181005/u1f4d6/u1f4d6_u192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://www.gstatic.com/android/keyboard/emojikit/20181005/u1f4d6/u1f4d6_u512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
